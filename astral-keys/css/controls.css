@@ -1,0 +1,385 @@
+/*
+  css/controls.css
+  -----------------
+  Buttons, icon buttons, sliders, the naming overlay, the audio
+  activation overlay, map zoom controls, and responsive adjustments for
+  narrower embedded containers.
+*/
+
+/* ------------------------------------------------------------------ */
+/*  Buttons                                                             */
+/* ------------------------------------------------------------------ */
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-glass-border);
+  background: var(--color-glass-bg);
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(var(--blur-glass));
+  transition: background 0.25s var(--ease-soft), color 0.25s var(--ease-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover {
+  background: var(--color-glass-bg-strong);
+}
+
+#zoom-reset-button {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.panel-button {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  padding: 8px 14px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 0.25s var(--ease-soft), opacity 0.25s var(--ease-soft), transform 0.2s var(--ease-soft);
+  flex: 1;
+}
+
+.panel-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.panel-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.panel-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.panel-button-primary {
+  width: 100%;
+  background: var(--color-accent);
+  color: var(--color-bg-deep);
+  border-color: var(--color-accent);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.panel-button-primary:hover:not(:disabled) {
+  background: var(--color-accent);
+  filter: brightness(1.08);
+}
+
+.panel-button-secondary {
+  color: var(--color-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Slider                                                              */
+/* ------------------------------------------------------------------ */
+
+input[type="range"] {
+  width: 110px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Map zoom controls                                                   */
+/* ------------------------------------------------------------------ */
+
+.map-controls {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 15;
+}
+
+/* Move the zoom controls up and out of the way once a floating panel
+   is visible in the bottom-right in Create mode. */
+.sky-svg.mode-create ~ .map-controls {
+  bottom: 230px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Audio activation overlay                                            */
+/* ------------------------------------------------------------------ */
+
+.audio-activation-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(4, 6, 13, 0.55);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  z-index: 50;
+  transition: opacity 0.6s var(--ease-soft);
+}
+
+.audio-activation-overlay p {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-glass-border);
+  background: var(--color-glass-bg);
+  padding: 16px 26px;
+  border-radius: 999px;
+  backdrop-filter: blur(var(--blur-glass));
+}
+
+.audio-activation-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Naming overlay                                                      */
+/* ------------------------------------------------------------------ */
+
+.naming-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 13, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 45;
+}
+
+.naming-overlay.is-open {
+  display: flex;
+}
+
+.naming-form {
+  background: var(--color-glass-bg-strong);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-panel);
+  padding: 22px 24px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.naming-form label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.naming-saved-confirmation {
+  background: var(--color-glass-bg-strong);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-panel);
+  padding: 22px 24px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.saved-confirmation-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin: 0 0 10px;
+}
+
+.naming-form input[type="text"] {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+}
+
+.naming-form input[type="text"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.naming-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Recording overlay                                                   */
+/* ------------------------------------------------------------------ */
+
+.recording-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 13, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 55;
+}
+
+.recording-overlay.is-open {
+  display: flex;
+}
+
+.recording-modal {
+  background: var(--color-glass-bg-strong);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-panel);
+  padding: 20px;
+  width: 360px;
+  max-width: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recording-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: #ff8a8a;
+}
+
+.recording-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5c5c;
+  animation: recording-dot-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes recording-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.recording-canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #04060d;
+}
+
+.recording-canvas-wrap canvas,
+.recording-canvas-wrap video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recording-unsupported-notice {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 0;
+}
+
+.recording-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recording-hint {
+  color: var(--color-text-faint);
+  font-size: 0.76rem;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+#download-recording-link {
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Responsive adjustments for narrower embedded containers             */
+/* ------------------------------------------------------------------ */
+
+@container (max-width: 640px) {
+  .app-title { font-size: 1.3rem; }
+}
+
+/* Fallback for browsers/environments without container query support:
+   respond to the app's own width via a class toggled in JS is not
+   implemented here to keep the project dependency-free, but the layout
+   below already degrades gracefully using percentage/flex widths. */
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 14px 16px 4px;
+  }
+  .mode-selector {
+    padding: 6px 16px 10px;
+  }
+  .mode-button {
+    padding: 6px 11px;
+    font-size: 0.76rem;
+  }
+  .star-info-panel,
+  .constellation-info-panel,
+  .creation-panel {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-width: none;
+  }
+  .saved-constellations-panel {
+    top: 12px;
+    right: 12px;
+    width: 170px;
+  }
+  .settings-panel {
+    top: 12px;
+    right: 12px;
+    width: 190px;
+  }
+  .map-controls {
+    right: 12px;
+    bottom: 12px;
+  }
+}

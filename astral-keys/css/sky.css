@@ -1,0 +1,252 @@
+/*
+  css/sky.css
+  -----------
+  Everything about how the sky itself looks: the SVG canvas, background
+  atmosphere stars, interactive star glow/pulse states, constellation
+  lines, and the hover tooltip.
+*/
+
+.sky-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#world-group {
+  transform-origin: 500px 300px; /* centre of the 1000x600 viewBox */
+  transition: transform 0.15s var(--ease-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Background atmosphere stars                                        */
+/* ------------------------------------------------------------------ */
+
+.background-star {
+  fill: var(--color-star-neutral);
+  animation: twinkle 5s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.75; }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Interactive stars                                                   */
+/* ------------------------------------------------------------------ */
+
+.interactive-star {
+  cursor: pointer;
+  outline: none; /* browsers draw a default focus rectangle on click otherwise */
+}
+
+.interactive-star:focus {
+  outline: none;
+}
+
+/* Re-applied here (after the reset above) so keyboard users still get a
+   visible focus ring - mouse clicks don't trigger :focus-visible, so
+   this never shows the ring the click-displacement bug was about. */
+.interactive-star:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+.star-hit-area {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.star-halo {
+  fill: var(--color-accent-soft);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-soft), r 0.4s var(--ease-soft);
+  pointer-events: none;
+  /* Without this, a CSS `transform: scale()` on an SVG shape scales
+     from the SVG viewport's origin (0,0), not the shape's own centre -
+     which is what caused the star to visibly "jump" when it pulsed. */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.star-core {
+  transition: r 0.3s var(--ease-soft), filter 0.3s var(--ease-soft);
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.star-warm { fill: var(--color-star-warm); }
+.star-cool { fill: var(--color-star-cool); }
+.star-neutral { fill: var(--color-star-neutral); }
+
+/* Resting sky: interactive stars read as slightly clearer than the
+   background, per architecture doc section 20. */
+.interactive-star .star-core {
+  filter: drop-shadow(0 0 1.5px currentColor);
+}
+
+.interactive-star.is-hovered .star-halo {
+  opacity: 0.55;
+  r: 13;
+}
+
+.interactive-star.is-hovered .star-core,
+.interactive-star.is-selected .star-core {
+  filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 10px currentColor);
+}
+
+.interactive-star.is-in-custom-constellation .star-halo,
+.interactive-star.is-in-viewed-constellation .star-halo {
+  opacity: 0.4;
+}
+
+/* Click / activation pulse (architecture doc section 8): brighten,
+   expand slightly, release one soft ring, settle back down. */
+.interactive-star.is-pulsing .star-core {
+  animation: star-pulse-core 0.9s var(--ease-soft);
+}
+
+.interactive-star.is-pulsing .star-halo {
+  animation: star-pulse-halo 0.9s var(--ease-soft);
+}
+
+@keyframes star-pulse-core {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+
+@keyframes star-pulse-halo {
+  0% { opacity: 0.7; r: 8; }
+  100% { opacity: 0; r: 26; }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Recognised constellation lines                                     */
+/* ------------------------------------------------------------------ */
+
+.constellation-group {
+  cursor: pointer;
+  transition: opacity 0.4s var(--ease-soft);
+}
+
+.constellation-line-hit {
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.constellation-line {
+  stroke: var(--color-star-neutral);
+  stroke-width: 0.6;
+  opacity: 0.28;
+  transition: opacity 0.35s var(--ease-soft), stroke-width 0.35s var(--ease-soft);
+}
+
+.constellation-label {
+  fill: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-soft);
+  cursor: pointer;
+}
+
+.sky-svg.mode-plain .constellation-label,
+.sky-svg.mode-create .constellation-label {
+  pointer-events: none;
+}
+
+.constellation-group.is-hovered .constellation-line,
+.constellation-group.is-selected .constellation-line {
+  opacity: 0.85;
+  stroke-width: 1;
+}
+
+.constellation-group.is-hovered .constellation-label,
+.constellation-group.is-selected .constellation-label {
+  opacity: 0.9;
+}
+
+/* Mode-driven visibility, per architecture doc section 4 */
+
+.sky-svg.mode-plain .constellation-line,
+.sky-svg.mode-plain .constellation-label {
+  opacity: 0 !important;
+}
+.sky-svg.mode-plain .constellation-group {
+  pointer-events: none;
+}
+
+.sky-svg.mode-create .constellation-line {
+  opacity: 0.06 !important;
+}
+.sky-svg.mode-create .constellation-label {
+  opacity: 0 !important;
+}
+.sky-svg.mode-create .constellation-group {
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Custom (user-drawn) constellation lines                            */
+/* ------------------------------------------------------------------ */
+
+.custom-constellation-line {
+  stroke: var(--color-accent);
+  stroke-width: 1;
+  opacity: 0.8;
+  stroke-linecap: round;
+}
+
+.custom-constellation-ring {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 0.8;
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tooltip                                                             */
+/* ------------------------------------------------------------------ */
+
+.star-tooltip {
+  position: absolute;
+  z-index: 30;
+  background: var(--color-glass-bg-strong);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: var(--color-text-primary);
+  backdrop-filter: blur(var(--blur-glass));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease-soft);
+  max-width: 200px;
+}
+
+.star-tooltip.is-visible {
+  opacity: 1;
+}
+
+.tooltip-name {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.tooltip-designation {
+  color: var(--color-text-faint);
+  font-size: 0.68rem;
+  margin-bottom: 4px;
+}
+
+.tooltip-distance,
+.tooltip-note {
+  color: var(--color-text-muted);
+}

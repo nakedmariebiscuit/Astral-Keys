@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astral Keys — The Sound of Starlight</title>
+  <meta name="description" content="An interactive musical star map where every star's distance becomes a note." />
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/sky.css" />
+  <link rel="stylesheet" href="css/controls.css" />
+</head>
+<body>
+
+  <!--
+    Everything lives inside this single container so the whole app can
+    be dropped into another page, resized, or placed in an iframe
+    without anything reaching outside its own box.
+    See css/main.css for how to change its width/height.
+  -->
+  <div class="astral-keys-app" id="astral-keys-app">
+
+    <!-- ============================= HEADER ============================= -->
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1 class="app-title">Astral Keys</h1>
+        <p class="app-tagline">The Sound of Starlight</p>
+      </div>
+
+      <div class="header-controls">
+        <label class="hemisphere-select-wrapper" for="hemisphere-select">
+          <span class="visually-hidden">Hemisphere</span>
+          <select id="hemisphere-select" aria-label="Choose sky hemisphere">
+            <option value="northern">Northern Sky</option>
+            <option value="southern">Southern Sky</option>
+          </select>
+        </label>
+
+        <button type="button" id="settings-button" class="icon-button" aria-label="Open settings" aria-haspopup="true">
+          ⚙
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================= MODE SELECTOR =========================== -->
+    <nav class="mode-selector" aria-label="View mode">
+      <button type="button" class="mode-button is-active" data-mode-button="plain">Plain Sky</button>
+      <button type="button" class="mode-button" data-mode-button="constellations">Constellations</button>
+      <button type="button" class="mode-button" data-mode-button="create">Create</button>
+    </nav>
+
+    <!-- ============================ STAR MAP ============================= -->
+    <main class="star-map-container" id="star-map-container">
+
+      <svg id="sky-svg" class="sky-svg mode-plain" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interactive night sky star map">
+        <g id="world-group">
+          <g id="background-stars-group" aria-hidden="true"></g>
+          <g id="constellation-lines-group"></g>
+          <g id="custom-constellation-group"></g>
+          <g id="interactive-stars-group"></g>
+        </g>
+      </svg>
+
+      <!-- Hover / keyboard-focus tooltip, positioned by star-interactions.js -->
+      <div class="star-tooltip" id="star-tooltip" role="status" aria-live="polite"></div>
+
+      <!-- Hover tooltip for constellations, positioned by constellation-manager.js -->
+      <div class="star-tooltip constellation-tooltip" id="constellation-tooltip" role="status" aria-live="polite"></div>
+
+      <!-- Map controls -->
+      <div class="map-controls">
+        <button type="button" id="zoom-in-button" class="icon-button" aria-label="Zoom in">+</button>
+        <button type="button" id="zoom-out-button" class="icon-button" aria-label="Zoom out">−</button>
+        <button type="button" id="zoom-reset-button" class="icon-button" aria-label="Reset view">Reset</button>
+      </div>
+
+      <!-- Gentle first-visit prompt required to unlock the Web Audio API -->
+      <div class="audio-activation-overlay" id="audio-activation-overlay" role="button" tabindex="0" aria-label="Click anywhere to awaken the stars">
+        <p>Click anywhere to awaken the stars</p>
+      </div>
+
+      <!-- ======================= FLOATING PANELS ========================= -->
+
+      <!-- Plain Sky mode: information about the selected star -->
+      <div class="floating-panel star-info-panel" id="star-info-panel"></div>
+
+      <!-- Constellation mode: information about the selected constellation -->
+      <div class="floating-panel constellation-info-panel" id="constellation-info-panel"></div>
+
+      <!-- Create mode: building controls for a custom constellation -->
+      <section class="floating-panel creation-panel" id="creation-panel" aria-label="Create a constellation">
+        <div class="panel-title">Your Constellation</div>
+        <div id="creation-star-list" class="creation-star-list"></div>
+        <div id="creation-count" class="creation-count">0 of 8 stars selected</div>
+        <div class="creation-buttons">
+          <button type="button" id="play-custom-chord-button" class="panel-button">Play Chord</button>
+          <button type="button" id="undo-custom-star-button" class="panel-button panel-button-secondary">Undo</button>
+          <button type="button" id="clear-custom-constellation-button" class="panel-button panel-button-secondary">Clear</button>
+        </div>
+        <button type="button" id="finish-custom-constellation-button" class="panel-button panel-button-primary">Finish</button>
+      </section>
+
+      <!-- Small transient feedback messages, e.g. "Select at least two stars first." -->
+      <div class="creation-feedback" id="creation-feedback" role="status" aria-live="polite"></div>
+
+      <!-- Naming overlay, shown after "Finish" -->
+      <div class="naming-overlay" id="naming-overlay">
+        <form class="naming-form" id="naming-form">
+          <label for="constellation-name-input">Name your constellation</label>
+          <input type="text" id="constellation-name-input" maxlength="30" placeholder="e.g. The Lantern" autocomplete="off" />
+          <div class="naming-buttons">
+            <button type="submit" class="panel-button panel-button-primary">Save Constellation</button>
+            <button type="button" id="keep-editing-button" class="panel-button panel-button-secondary">Keep Editing</button>
+          </div>
+        </form>
+
+        <!-- Shown in place of the form once saving succeeds -->
+        <div class="naming-saved-confirmation" id="naming-saved-confirmation" hidden>
+          <div class="panel-title" id="saved-confirmation-title">Saved!</div>
+          <p class="saved-confirmation-subtitle">Want a shareable clip of it lighting up?</p>
+          <div class="naming-buttons">
+            <button type="button" id="record-after-save-button" class="panel-button panel-button-primary">Record a Clip</button>
+            <button type="button" id="done-after-save-button" class="panel-button panel-button-secondary">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recording overlay: renders a shareable square clip of a constellation -->
+      <div class="recording-overlay" id="recording-overlay">
+        <div class="recording-modal">
+          <div class="recording-header">
+            <span id="recording-modal-title">Record a Clip</span>
+            <span class="recording-indicator" id="recording-indicator" hidden>
+              <span class="recording-dot"></span> REC <span id="recording-timer">0:00</span>
+            </span>
+          </div>
+
+          <div class="recording-canvas-wrap">
+            <canvas id="recording-canvas" width="720" height="720"></canvas>
+            <video id="recording-preview-video" playsinline controls hidden></video>
+          </div>
+
+          <p class="recording-unsupported-notice" id="recording-unsupported-notice" hidden>
+            Recording clips isn't supported in this browser - try the latest Chrome, Edge, or Firefox.
+          </p>
+
+          <div class="recording-controls" id="recording-controls-idle">
+            <p class="recording-hint">A short square clip: its stars connect one by one, then the chord swells in.</p>
+            <button type="button" id="start-recording-button" class="panel-button panel-button-primary">Start Recording</button>
+            <button type="button" id="cancel-recording-button" class="panel-button panel-button-secondary">Cancel</button>
+          </div>
+
+          <div class="recording-controls" id="recording-controls-done" hidden>
+            <a href="#" id="download-recording-link" class="panel-button panel-button-primary" download>Download Clip</a>
+            <button type="button" id="record-again-button" class="panel-button panel-button-secondary">Record Again</button>
+            <button type="button" id="close-recording-button" class="panel-button panel-button-secondary">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved custom constellations for this browser session -->
+      <div class="floating-panel saved-constellations-panel" id="saved-constellations-panel"></div>
+
+      <!-- Settings drawer -->
+      <section class="settings-panel" id="settings-panel" aria-label="Settings">
+        <div class="panel-title">Settings</div>
+
+        <label class="settings-row">
+          <span>Volume</span>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="Volume" />
+        </label>
+
+        <label class="settings-row settings-row-checkbox">
+          <input type="checkbox" id="reduced-motion-toggle" />
+          <span>Reduce star animation</span>
+        </label>
+
+        <button type="button" id="reset-view-button" class="panel-button panel-button-secondary">Reset View</button>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Star & constellation data (loaded before the modules that use it) -->
+  <script src="data/northern-stars.js"></script>
+  <script src="data/southern-stars.js"></script>
+  <script src="data/northern-constellations.js"></script>
+  <script src="data/southern-constellations.js"></script>
+
+  <!-- App modules -->
+  <script src="js/state.js"></script>
+  <script src="js/audio-engine.js"></script>
+  <script src="js/sky-renderer.js"></script>
+  <script src="js/star-interactions.js"></script>
+  <script src="js/constellation-manager.js"></script>
+  <script src="js/creation-manager.js"></script>
+  <script src="js/recorder.js"></script>
+  <script src="js/ui-manager.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
